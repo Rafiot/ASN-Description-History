@@ -9,16 +9,12 @@ import redis
 import time
 from pubsublogger import publisher
 
-redis_host = '127.0.0.1'
-redis_db = 0
-redis_port = 6389
+import constraint as c
 
 sleep_timer = 36000
 
-
-
 if __name__ == '__main__':
-    publisher.port = redis_port
+    publisher.port = c.redis_port
     publisher.channel = 'ASN_History'
     time.sleep(5)
     publisher.info('Importer started.')
@@ -41,7 +37,7 @@ if __name__ == '__main__':
         update = dateutil.parser.parse(update_raw)
 
 
-        r = redis.Redis(host = redis_host, port=redis_port, db=redis_db)
+        r = redis.Redis(host = c.redis_host, port=c.redis_port, db=c.redis_db)
 
         last_update = r.get('last_update')
         if last_update != update.isoformat():
@@ -51,7 +47,17 @@ if __name__ == '__main__':
             p = r.pipeline(transaction=False)
             p.set('last_update', update.isoformat())
             for asn, descr in data:
-                p.hset(asn, update.isoformat(), descr)
+                last_descr = None
+                all_descrs = r.hgetall(asn)
+                if len(all_descrs) != 0:
+                    dates = all_descrs.keys()
+                    dates.sort()
+                    last_descr = all_descrs[dates[-1]]
+                if last_descr is None or descr != last_descr:
+                    p.hset(asn, update.isoformat(), descr)
+                    msg = 'New description for {asn}. Was {old}, is {new}'.\
+                            format(asn = asn, old = last_descr, new = descr)
+                    publisher.info(msg)
             p.execute()
             publisher.info('Import finished.')
         time.sleep(sleep_timer)
