@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import argparse
 import dateutil.parser
@@ -10,9 +11,11 @@ import redis
 import time
 import urllib
 
-import constraint as c
+sleep_timer = 3600
+redis_host = '127.0.0.1'
+redis_db = 0
+redis_port = 6389
 
-sleep_timer = 36000
 
 def __prepare(directory):
     temp_dir = os.path.join(directory, 'temp')
@@ -69,13 +72,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
     __prepare(args.directory)
 
-    publisher.port = c.redis_port
+    publisher.port = redis_port
     publisher.channel = 'ASN_History'
     time.sleep(5)
     publisher.info('Importer started.')
     while True:
         for timestamp, data in parse(args.directory):
-            r = redis.Redis(host = c.redis_host, port=c.redis_port, db=c.redis_db)
+            r = redis.Redis(host = redis_host, port=redis_port, db=redis_db)
 
             last_update = r.get('last_update')
             if last_update > timestamp:
@@ -98,8 +101,7 @@ if __name__ == '__main__':
                         publisher.debug('New asn: {asn}'.format(asn = asn))
                         new_asns += 1
                     else:
-                        dates = all_descrs.keys()
-                        dates.sort()
+                        dates = sorted(all_descrs.keys())
                         last_descr = all_descrs[dates[-1]]
                         if descr != last_descr:
                             p.hset(asn, timestamp, descr)

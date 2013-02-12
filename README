@@ -1,0 +1,16 @@
+This project aims to provide a simple way to get the description of an ASN, and
+to see the changes over the time.
+
+We use the data provided by cidr-report.org:
+http://www.cidr-report.org/as2.0/autnums.html
+
+Server
+======
+
+Fetch ASNs descriptions from cidr-report.org, parse the HTML file and populate
+a redis database.
+
+Client
+======
+
+Query this database to get the description(s) (latest or all).
