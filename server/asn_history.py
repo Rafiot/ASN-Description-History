@@ -53,13 +53,17 @@ def parse(directory):
     for f_name in to_import:
         if os.path.isdir(f_name):
             continue
-        f = open(f_name).read()
-        data = re.findall('as=AS(.*)&.*</a> (.*)\n', f)
-        update_raw = re.sub('[\n()]', '',
-                re.findall('File last modified at (.*)</I>', f , re.S)[0])
-        update = dateutil.parser.parse(update_raw).isoformat()
-        yield update, data
-        os.rename(f_name, os.path.join(old_dir, update))
+        try:
+            update = None
+            f = open(f_name).read()
+            data = re.findall('as=AS(.*)&.*</a> (.*)\n', f)
+            update_raw = re.sub('[\n()]', '',
+                    re.findall('File last modified at (.*)</I>', f , re.S)[0])
+            update = dateutil.parser.parse(update_raw).isoformat()
+            yield update, data
+            os.rename(f_name, os.path.join(old_dir, update))
+        except:
+            publisher.info('Invalid file. Update:' + update)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Import ASN descriptions.')
