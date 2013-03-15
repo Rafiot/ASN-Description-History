@@ -120,7 +120,12 @@ if __name__ == '__main__':
         if args.not_new:
             break
         else:
-            if not fetch('http://www.cidr-report.org/as2.0/autnums.html',
-                    args.directory):
+            newfile = False
+            try:
+                newfile = fetch('http://www.cidr-report.org/as2.0/autnums.html',
+                        args.directory)
+            except:
+                publisher.warning('Exception in fetching!')
+            if not newfile:
                 time.sleep(sleep_timer)
 
