@@ -13,6 +13,7 @@ r = None
 def __prepare():
     global r
     r = redis.Redis(host = redis_host, port=redis_port, db=redis_db)
+    r.ping()
 
 def get_all_descriptions(asn):
     """
